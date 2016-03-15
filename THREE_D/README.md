@@ -5,8 +5,8 @@ THREE_D
 
 ![capture](https://raw.githubusercontent.com/mattatz/InteractiveCoding/master/THREE_D/data/capture.gif)
 
-ProcessingでShaderを使いたいたいと思い，
-[PShaderの使い方のチュートリアル記事](https://processing.org/tutorials/pshader/)を参考にしながら作りました．
+ProcessingでShaderを使いたいと思い，
+[PShaderのチュートリアル記事](https://processing.org/tutorials/pshader/)を参考にしながら作りました．
 
 * メッシュ(PShape)をProcessingで作ろうと思ったのですが，時間がなかったのでobjファイルを[ネット](http://graphics.stanford.edu/hackliszt/meshes/sphere.obj)から拝借しました．
 * vertex shader(sample.vert)では，4次元ベクトルをシードとして用いる[simplex noiseのアルゴリズム](https://github.com/ashima/webgl-noise/blob/master/src/noise4D.glsl)を使いました．このノイズの値に応じて頂点を法線方向に動かしてグニャグニャさせています．
