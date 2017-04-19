@@ -1,4 +1,7 @@
 
+#define FIRE_OCTIVES 3
+#define ITERATIONS 10
+
 sampler2D _FireTex;
 fixed4 _Scale;
 float _Lacunarity, _Gain, _Magnitude;
@@ -18,10 +21,8 @@ float turbulence(float3 pos) {
 }
 
 float sample_fire (float3 loc, float4 scale) {
-    // convert to (radius, height) to sample fire texture.
     float2 st = float2(sqrt(dot(loc.xz, loc.xz)), loc.y);
 
-    // convert loc to noise space
     loc.y -= _Time.y * scale.w;
     loc *= scale.xyz;
 
@@ -39,7 +40,7 @@ float sample_fire (float3 loc, float4 scale) {
 float sample(float3 rayPos) {
 	float3 rayDir = -UNITY_MATRIX_V[2].xyz;
 
-	float rayLen = 0.025;
+	float rayLen = 0.1;
 
 	float output = 0;
 	for(int i = 0; i < ITERATIONS; i++) {

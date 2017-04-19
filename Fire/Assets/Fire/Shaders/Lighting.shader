@@ -15,26 +15,26 @@
 
 		_SpecularColor ("Specular Color", Color) = (0.5, 0.5, 0.5, 0.2)
 		_SpecularPower ("Specular", Range(1.0, 50.0)) = 16.3
-		_LightDirection ("Light Direction", Vector) = (0.51, 0.38, 0.97, -1.0)
 	}
 
 	SubShader {
-		Tags { "RenderType" = "Opaque" }
+		Tags { 
+			"RenderType" = "Opaque" 
+			"LightMode"="ForwardBase" 
+		}
 
-		LOD 200
+		LOD 100
 
 		CGINCLUDE
 
 		#include "UnityCG.cginc"
+		#pragma multi_compile_fwdbase
 
 		#include "Assets/Common/Shaders/SimplexNoise3D.cginc"
 		#define FIRE_NOISE snoise
 
 		// #include "Assets/Common/Shaders/ClassicNoise3D.cginc"
         // #define FIRE_NOISE cnoise
-
-        #define FIRE_OCTIVES 3
-        #define ITERATIONS 8
 
         #include "./Fire.cginc"
 
@@ -43,19 +43,24 @@
 
 		float4 _Color, _SpecularColor;
 		float _SpecularPower;
-		float3 _LightDirection;
 
 		struct v2f {
 		    float4 pos: POSITION;
 		    float3 world: NORMAL;
 		    float3 viewDir: TEXCOORD0;
+		    float3 lightDir: TEXCOORD1;
 		};
 
 		v2f vert (appdata_full v) {
 		    v2f OUT;
 		    OUT.pos = UnityObjectToClipPos(v.vertex);
 		    OUT.world = (mul(unity_ObjectToWorld, v.vertex)).xyz;
-		    OUT.viewDir = ObjSpaceViewDir(v.vertex);
+
+			// world space
+			TANGENT_SPACE_ROTATION;
+			OUT.viewDir = mul(rotation, ObjSpaceViewDir(v.vertex));
+			OUT.lightDir = mul(rotation, ObjSpaceLightDir(v.vertex));
+
 		    return OUT;
 		}
 
@@ -63,13 +68,15 @@
         	float alpha = sample(IN.world.xyz);
         	float3 norm = sample_normal(IN.world.xyz);
         	float3 viewDir = normalize(IN.viewDir);
+			float3 lightDir = normalize(IN.lightDir);
 
-			float diff = dot(normalize(_LightDirection + viewDir), norm);
-			float p = pow(saturate(diff), _SpecularPower);
+			float3 h = normalize(lightDir + viewDir);
+			float diff = saturate(max(0.5, dot(lightDir, norm)));
+			float spec = pow(saturate(dot(h, norm)), _SpecularPower);
 
 			float3 refl = normalize(reflect(viewDir, norm));
-			float4 col = _Color * saturate(texCUBE(_CubeMap, refl) * _Brightness);
-			col += p * _SpecularColor;
+			float4 col = _Color * saturate(texCUBE(_CubeMap, refl) * _Brightness) * diff;
+			col += spec * _SpecularColor;
 
 			return float4(col.rgb, alpha * 10);
         }

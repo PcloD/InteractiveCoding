@@ -24,9 +24,6 @@
 		// #include "Assets/Common/Shaders/ClassicNoise3D.cginc"
         // #define FIRE_NOISE cnoise
 
-        #define FIRE_OCTIVES 3
-        #define ITERATIONS 8
-
         #include "./Fire.cginc"
 
 		struct v2f {
