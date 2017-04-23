@@ -27,6 +27,7 @@ namespace mattatz.GeneticAlgorithm {
 			float[] child = new float[genes.Length];
 
 			int mid = Mathf.FloorToInt(Random.value * genes.Length);
+			mid = (Mathf.FloorToInt(mid / 2) * 2);
 
 			// Take "half" from one and "half" from the other
 			for (int i = 0, n = genes.Length; i < n; i++) {
@@ -41,12 +42,10 @@ namespace mattatz.GeneticAlgorithm {
 		}
 		
 		// Based on a mutation probability, picks a new random value
-		public void Mutate (float m, Vector2 range) {
-			// var c = (range.y - range.x) * 0.5f + range.x;
+		public void Mutate (float m, float s = 1f) {
 			for (int i = 0, n = genes.Length; i < n; i++) {
 				if (Random.value < m) {
-					// genes[i] += Gaussian.Std(c, 0.25f);
-					genes[i] += Gaussian.Std(0f, 0.75f);
+					genes[i] += Gaussian.Std(0f, 0.75f) * s;
 				}
 			}
 		}

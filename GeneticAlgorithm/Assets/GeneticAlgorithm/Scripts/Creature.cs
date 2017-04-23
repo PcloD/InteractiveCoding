@@ -5,7 +5,10 @@ namespace mattatz.GeneticAlgorithm {
 
 	public abstract class Creature {
 
-		public float Fitness { get { return fitness; } }
+		public float Fitness { 
+			get { return fitness; } 
+			set { fitness = value; } 
+		}
 		public DNA DNA { get { return dna; } }
 
 		protected DNA dna;
@@ -17,13 +20,6 @@ namespace mattatz.GeneticAlgorithm {
 			this.dna = dna;
 		}
 
-		public virtual void Setup() {
-			// do nothing
-		}
-
-		public abstract Creature Generate(DNA dna);
-		public abstract float ComputeFitness ();
-		public abstract int GetGenesCount ();
 	}
 
 }

@@ -19,8 +19,19 @@ public class Painter : Creature {
             genes[i] = Random.value;
             genes[i + 1] = Random.value;
         }
-        this.dna = new DNA(genes);
+        dna = new DNA(genes);
+		Normalize();
     }
+
+	public Painter(DNA dna): base(dna) {
+		Normalize();
+	}
+
+	void Normalize() {
+		for(int i = 0, n = dna.genes.Length; i < n; i++) {
+			dna.genes[i] = Mathf.Clamp01(dna.genes[i]);
+		}
+	}
 
     public List<Vector2> GetPoints (int resolution)
     {
@@ -35,21 +46,5 @@ public class Painter : Creature {
         }
         return points;
     }
-
-    public override float ComputeFitness()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override Creature Generate(DNA dna)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override int GetGenesCount()
-    {
-        throw new NotImplementedException();
-    }
-
 
 }
