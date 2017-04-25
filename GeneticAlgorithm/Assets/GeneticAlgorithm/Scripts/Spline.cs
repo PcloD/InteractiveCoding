@@ -16,4 +16,16 @@ public class Spline {
         return (1f + 2f * t) * tm2 * p1 + t * tm2 * m1 + t2 * (3 - 2f * t) * p2 + t2 * tm1 * m2;
     }
 
+	public static Vector2 GetPosition(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        var tm1 = t - 1f;
+        var tm2 = tm1 * tm1;
+        var t2 = t * t;
+
+        var m1 = 0.5f * (p2 - p0);
+        var m2 = 0.5f * (p3 - p1);
+
+        return (1f + 2f * t) * tm2 * p1 + t * tm2 * m1 + t2 * (3 - 2f * t) * p2 + t2 * tm1 * m2;
+    }
+
 }

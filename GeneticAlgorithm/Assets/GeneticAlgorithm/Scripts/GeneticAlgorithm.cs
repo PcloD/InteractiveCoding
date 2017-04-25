@@ -9,6 +9,10 @@ using mattatz.GeneticAlgorithm;
 
 public class GeneticAlgorithm : MonoBehaviour {
 
+	public int Generations { get { return generations; } }
+	public int Strokes { get { return strokes; } }
+	public List<Nematode> Nematodes { get { return nematodes; } }
+
 	[SerializeField] float mutationRate = 0.2f;
 	[SerializeField, Range(0f, 0.2f)] float mutationScale = 0.05f;
 	[SerializeField] int count = 50;
@@ -20,17 +24,18 @@ public class GeneticAlgorithm : MonoBehaviour {
     [SerializeField] int resolution = 32;
 	[SerializeField] Gradient grad;
 
+	[SerializeField] bool automatic = true;
 	[SerializeField] bool showTexture;
 
-    List<Painter> painters;
+	List<Nematode> nematodes;
     Color[] pixels;
 
-	void Start () {
-        painters = new List<Painter>();
+	void Awake () {
+        nematodes = new List<Nematode>();
 
         for(int i = 0; i < count; i++) {
-            var painter = new Painter(strokes);
-            painters.Add(painter);
+            var painter = new Nematode(strokes);
+            nematodes.Add(painter);
         }
 
         dst = Compress(source);
@@ -45,6 +50,8 @@ public class GeneticAlgorithm : MonoBehaviour {
 		*/
 
 		if(Input.GetKey(KeyCode.E)) {
+			Evolve();
+		} else if(automatic && Time.frameCount % 4 == 0) {
 			Evolve();
 		}
 	}
@@ -70,16 +77,16 @@ public class GeneticAlgorithm : MonoBehaviour {
 	void Evolve() {
 		generations++;
 
-		painters.ForEach(painter => {
+		nematodes.ForEach(painter => {
 			ComputeFitness(painter);
 		});
-		painters = Reproduction();
+		nematodes = Reproduction();
 	}
 
-	List<Painter> Selection () {
-		var pool = new List<Painter>();
+	List<Nematode> Selection () {
+		var pool = new List<Nematode>();
 		float maxFitness = GetMaxFitness();
-		painters.ForEach(c => {
+		nematodes.ForEach(c => {
 			var fitness = c.Fitness / maxFitness; // normalize
 			int n = Mathf.FloorToInt(fitness * 50);
 			for(int j = 0; j < n; j++) {
@@ -89,16 +96,16 @@ public class GeneticAlgorithm : MonoBehaviour {
 		return pool;
 	}
 
-	List<Painter> Reproduction () {
+	List<Nematode> Reproduction () {
 
 		var pool = Selection();
 		if(pool.Count <= 0) {
 			Debug.LogWarning("mating pool is empty.");
 		}
 
-		var next = new List<Painter>();
+		var next = new List<Nematode>();
 
-		for(int i = 0, n = painters.Count; i < n; i++) {
+		for(int i = 0, n = nematodes.Count; i < n; i++) {
 			int m = Random.Range(0, pool.Count);
 			int d = Random.Range(0, pool.Count);
 
@@ -108,7 +115,7 @@ public class GeneticAlgorithm : MonoBehaviour {
 			DNA child = mom.Crossover(dad);
 			child.Mutate(mutationRate, mutationScale);
 
-			next.Add(new Painter(child));
+			next.Add(new Nematode(child));
 		}
 
 		return next;
@@ -116,7 +123,7 @@ public class GeneticAlgorithm : MonoBehaviour {
 
 	float GetMaxFitness() {
 		float max = 0f;
-		painters.ForEach(creature => {
+		nematodes.ForEach(creature => {
 			var fitness = creature.Fitness;
 			if(fitness > max) {
 				max = fitness;
@@ -132,7 +139,7 @@ public class GeneticAlgorithm : MonoBehaviour {
 		return color.a < 0.1f;
 	}
 
-    void ComputeFitness(Painter painter)
+    void ComputeFitness(Nematode painter)
     {
 		var fitness = new Dictionary<int, bool>();
         var points = painter.GetPoints(resolution);
@@ -181,7 +188,7 @@ public class GeneticAlgorithm : MonoBehaviour {
 		painter.Fitness = (1f * values.FindAll((v) => v).Count) / values.Count;
     }
 
-	void DrawPainterGizmos (Painter painter)
+	void DrawPainterGizmos (Nematode painter)
     {
         var points = painter.GetPoints(resolution);
         const float step = 0.1f;
@@ -227,6 +234,7 @@ public class GeneticAlgorithm : MonoBehaviour {
 
 		#endif
 
+		/*
         var l = resolution - 1; 
         for(int y = 0; y < resolution; y++)
         {
@@ -242,9 +250,10 @@ public class GeneticAlgorithm : MonoBehaviour {
                 }
             }
         }
+		*/
 
-        if (painters == null) return;
-
+		/*
+        if (nematodes == null) return;
 		for(int i = 0, n = painters.Count; i < n; i++) {
 			var painter = painters[i];
 			var t = 1f * i / n;
@@ -253,22 +262,11 @@ public class GeneticAlgorithm : MonoBehaviour {
 			Gizmos.color = color;
             DrawPainterGizmos(painter);
 		}
+		*/
 
 		if(showTexture) {
-			Gizmos.DrawGUITexture(new Rect(0, 0, resolution, resolution), source);
+			Gizmos.DrawGUITexture(new Rect(-0.5f, -0.5f, 1, 1), source);
 		}
-
-		/*
-		var inv = 1f / resolution;
-		for(int y = 0; y < resolution; y++) {
-			for(int x = 0; x < resolution; x++) {
-				var color = pixels[y * resolution + x];
-				var center = new Vector3(x, y, 0f);
-				Gizmos.color = color;
-				Gizmos.DrawCube(center, new Vector3(1f, 1f, 1f));
-			}
-		}
-		*/
 
     }
 
