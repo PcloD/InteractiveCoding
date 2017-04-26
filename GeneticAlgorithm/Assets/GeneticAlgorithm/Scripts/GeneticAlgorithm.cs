@@ -24,35 +24,42 @@ public class GeneticAlgorithm : MonoBehaviour {
     [SerializeField] int resolution = 32;
 	[SerializeField] Gradient grad;
 
+	[SerializeField, Range(2, 10)] int frequency = 4;
 	[SerializeField] bool automatic = true;
 	[SerializeField] bool showTexture;
 
 	List<Nematode> nematodes;
     Color[] pixels;
 
+	public void Setup () {
+		if(nematodes != null) nematodes.Clear();
+
+		generations = 0;
+
+		nematodes = new List<Nematode>();
+
+		for(int i = 0; i < count; i++) {
+			var painter = new Nematode(strokes);
+			nematodes.Add(painter);
+		}
+
+		dst = Compress(source);
+		pixels = dst.GetPixels();
+	}
+
 	void Awake () {
-        nematodes = new List<Nematode>();
-
-        for(int i = 0; i < count; i++) {
-            var painter = new Nematode(strokes);
-            nematodes.Add(painter);
-        }
-
-        dst = Compress(source);
-        pixels = dst.GetPixels();
+		Setup();
 	}
 	
 	void Update () {
-		/*
-		if(Input.GetKeyDown(KeyCode.E)) {
-			Evolve();
-		}
-		*/
-
 		if(Input.GetKey(KeyCode.E)) {
 			Evolve();
-		} else if(automatic && Time.frameCount % 4 == 0) {
+		} else if(automatic && Time.frameCount % frequency == 0) {
 			Evolve();
+		}
+
+		if(Input.GetKeyDown(KeyCode.Space)) {
+			Setup();
 		}
 	}
 
@@ -135,8 +142,8 @@ public class GeneticAlgorithm : MonoBehaviour {
 	bool Fit(int x, int y) {
 		if(x < 0 || x >= resolution || y < 0 || y >= resolution) return false;
 		var color = pixels[y * resolution + x];
-		// return color.a > 0.5f;
-		return color.a < 0.1f;
+		return color.a > 0.5f;
+		// return color.a < 0.1f;
 	}
 
     void ComputeFitness(Nematode painter)

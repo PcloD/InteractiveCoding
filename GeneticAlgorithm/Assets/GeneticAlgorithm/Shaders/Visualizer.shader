@@ -75,7 +75,7 @@ Shader "Sketch/Visualizer"
 				p3 = UNITY_SAMPLE_TEX2DARRAY_LOD(_Nematodes, float3(_Strokes.z + _Strokes.y * (idx + 2), 0.5, depth), 0).xyz;
 		    }
 			
-			void append (inout LineStream<g2f> stream, float lifetime, float v, float start, float last, float3 p0, float3 p1, float3 p2, float3 p3) {
+			void append (inout LineStream<g2f> stream, float lifetime, float2 uv, float start, float last, float3 p0, float3 p1, float3 p2, float3 p3) {
 				g2f pIn;
 				pIn.lifetime = lifetime;
 
@@ -89,7 +89,7 @@ Shader "Sketch/Visualizer"
 					p.xy -= 0.5;
 
 					pIn.pos = UnityObjectToClipPos(float4(p, 1));
-					pIn.uv = float2(v + t * _Strokes.y, 0);
+					pIn.uv = float2(uv.x, uv.y + t * _Strokes.y);
 					stream.Append(pIn);
 				}
 
@@ -97,7 +97,7 @@ Shader "Sketch/Visualizer"
 				p.xy -= 0.5;
 
 				pIn.pos = UnityObjectToClipPos(float4(p, 1));
-				pIn.uv = float2(v + t * _Strokes.y, 0);
+				pIn.uv = float2(uv.x, uv.y + t * _Strokes.y);
 				stream.Append(pIn);
 			}
 
@@ -142,7 +142,7 @@ Shader "Sketch/Visualizer"
 				// first segment
 				if(lfl > 1) {
 					fetch(i, depth, p0, p1, p2, p3);
-					append(stream, lifetime, i * _Strokes.y, sfr, 1, p0, p1, p2, p3); 
+					append(stream, lifetime, float2(t, i * _Strokes.y), sfr, 1, p0, p1, p2, p3); 
 					if(from == lfl) {
 						// first segment only
 						return;
@@ -151,18 +151,19 @@ Shader "Sketch/Visualizer"
 
 				for(i = from + 1; i < lfl; i++) {
 					fetch(i, depth, p0, p1, p2, p3);
-					append(stream, lifetime, i * _Strokes.y, 0, 1, p0, p1, p2, p3);
+					append(stream, lifetime, float2(t, i * _Strokes.y), 0, 1, p0, p1, p2, p3);
 				}
 
 				// last segment
 				fetch(lfl, depth, p0, p1, p2, p3);
-				append(stream, lifetime, lfl * _Strokes.y, 0, lfr, p0, p1, p2, p3);
+				append(stream, lifetime, float2(t, lfl * _Strokes.y), 0, lfr, p0, p1, p2, p3);
 			}
 			
 			fixed4 frag (g2f IN) : SV_Target
 			{
 				float lm = smoothstep(0.0, 0.1, IN.lifetime) * smoothstep(1.0, 0.9, IN.lifetime);
-				return fixed4(IN.uv, 1, lm);
+				float4 grad = tex2D(_Gradient, float2(IN.uv.x, 0.5));
+				return fixed4(1, 1, 1, lm) * grad;
 			}
 
 			ENDCG

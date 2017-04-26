@@ -2,7 +2,7 @@
 {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
-		_Speed ("Speed", Float) = 0.005
+		_Speed ("Speed", Float) = 0.01
 	}
 
 	CGINCLUDE
@@ -51,7 +51,7 @@
 			{
 				float r = nrand(IN.uv);
 				float r2 = saturate(nrand(IN.uv.yx, 13.337));
-				return float4(0, lerp(0.25, 1.0, r2), 0, 1);
+				return float4(0, lerp(0.1, 1.0, r2), 0, 1);
 			}
 			ENDCG
 		}
@@ -80,7 +80,7 @@
 				float4 ln = tex2D(_MainTex, IN.uv);
 				if(ln.x >= 1) {
 					ln.x = 0;
-					ln.y = lerp(0.25, 1.0, nrand(IN.uv.yx, _Time.x));
+					ln.y = lerp(0.1, 1.0, nrand(IN.uv.yx, _Time.x));
 				}
 				return ln;
 			}

@@ -47,7 +47,7 @@
 			fixed4 frag (v2f IN) : SV_Target
 			{
 				fixed4 col = tex2D(_MainTex, IN.uv);
-				col.a = 1.0 - col.r;
+				// col.a = 1.0 - col.r;
 				col.rgb = col.a * _Alpha;
 				col.a *= _Alpha;
 				return col;
