@@ -40,7 +40,6 @@
 	SubShader
 	{
 		Cull Off ZWrite Off ZTest Always
-		Blend Off
 
 		Pass // init
 		{
@@ -49,9 +48,8 @@
 			
 			float4 frag (v2f IN) : SV_Target
 			{
-				float r = nrand(IN.uv);
-				float r2 = saturate(nrand(IN.uv.yx, 13.337));
-				return float4(0, lerp(0.1, 1.0, r2), 0, 1);
+				float r = nrand(float2(IN.uv.x, 0));
+				return float4(0, lerp(0.3, 1.0, abs(r)), 0, 1);
 			}
 			ENDCG
 		}
@@ -64,7 +62,7 @@
 			float4 frag (v2f IN) : SV_Target
 			{
 				float4 ln = tex2D(_MainTex, IN.uv);
-				ln.x += ln.y * _Time.x * _Speed;
+				ln.x += max(0.25, ln.y) * _Time.x * _Speed;
 				return ln;
 			}
 			ENDCG
@@ -80,7 +78,7 @@
 				float4 ln = tex2D(_MainTex, IN.uv);
 				if(ln.x >= 1) {
 					ln.x = 0;
-					ln.y = lerp(0.1, 1.0, nrand(IN.uv.yx, _Time.x));
+					ln.y = lerp(0.3, 1.0, abs(nrand(float2(0, IN.uv.x), _Time.x)));
 				}
 				return ln;
 			}

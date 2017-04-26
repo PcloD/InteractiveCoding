@@ -56,7 +56,7 @@ public class Nematode : Creature {
 			// 0.0 ~ 1.0
 			var nx = this.dna.genes[idx];
 			var ny = this.dna.genes[idx + 1];
-			tex.SetPixel(x, 0, new Color(nx, ny, 0f));
+			tex.SetPixel(x, 0, new Color(nx, ny, NormalizedFitness));
 		}
 		tex.Apply();
 

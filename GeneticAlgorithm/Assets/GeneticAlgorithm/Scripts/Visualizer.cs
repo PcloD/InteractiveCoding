@@ -35,7 +35,7 @@ public class Visualizer : MonoBehaviour {
 		Build();
 	}
 	
-	void Update () {
+	void LateUpdate () {
 		generationsLabel.text = ga.Generations.ToString();
 
 		Graphics.Blit(lines.ReadTex, lines.WriteTex, updateMat, (int)LinesRenderMode.Update);
@@ -44,17 +44,22 @@ public class Visualizer : MonoBehaviour {
 		var prev = RenderTexture.active;
 		{
 			RenderTexture.active = lines.ReadTex;
-			feedback.ReadPixels(new Rect(0.0f, 0.0f, count, 1), 0, 0);
+			feedback.ReadPixels(new Rect(0.0f, 0.0f, lines.ReadTex.width, lines.ReadTex.height), 0, 0, false);
 			feedback.Apply();
 
+            bool flag = false;
 			for(int x = 0; x < count; x++) {
 				var line = feedback.GetPixel(x, 0);
 				if(line.r >= 1f) {
+                    flag = true;
 					Reset(x);
 				}
 			}
+            if(flag) {
+                array.Apply();
+            }
 		}
-		RenderTexture.active = prev;
+        RenderTexture.active = prev;
 
 		Graphics.Blit(lines.ReadTex, lines.WriteTex, updateMat, (int)LinesRenderMode.Birth);
 		lines.Swap();
@@ -63,17 +68,16 @@ public class Visualizer : MonoBehaviour {
 	void Reset(int index) {
 		var cr = ga.Nematodes[index % ga.Nematodes.Count];
 		Graphics.CopyTexture(cr.GetTexture(), 0, 0, array, index, 0);
-		array.Apply();
 	}
 
 	void Build() {
 		array = new Texture2DArray(ga.Strokes, 1, count, TextureFormat.RGBAFloat, false);
 		array.Apply();
 
-		lines = new FboPingpong(count, 1, RenderTextureFormat.ARGB32, FilterMode.Point);
+		lines = new FboPingpong(count, 2, RenderTextureFormat.ARGBFloat, FilterMode.Point);
 		Graphics.Blit(null, lines.ReadTex, updateMat, (int)LinesRenderMode.Init);
 
-		feedback = new Texture2D(count, 1, TextureFormat.ARGB32, false);
+		feedback = new Texture2D(count, 2, TextureFormat.RGBAFloat, false);
 		feedback.filterMode = FilterMode.Point;
 		feedback.Apply();
 

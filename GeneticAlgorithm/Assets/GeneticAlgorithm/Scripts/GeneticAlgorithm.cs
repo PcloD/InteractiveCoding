@@ -45,6 +45,8 @@ public class GeneticAlgorithm : MonoBehaviour {
 
 		dst = Compress(source);
 		pixels = dst.GetPixels();
+
+        ComputeFitnesses();
 	}
 
 	void Awake () {
@@ -65,16 +67,17 @@ public class GeneticAlgorithm : MonoBehaviour {
 
     Texture2D Compress(Texture2D source)
     {
+        var prev = RenderTexture.active;
+
         var rt = new RenderTexture(resolution, resolution, 0);
         var dst = new Texture2D(resolution, resolution);
         Graphics.Blit(source, rt);
-
-        var prev = RenderTexture.active;
         {
             RenderTexture.active = rt;
             dst.ReadPixels(new Rect(0, 0, resolution, resolution), 0, 0);
             dst.Apply();
         }
+
         RenderTexture.active = prev;
 
         rt.Release();
@@ -84,18 +87,14 @@ public class GeneticAlgorithm : MonoBehaviour {
 	void Evolve() {
 		generations++;
 
-		nematodes.ForEach(painter => {
-			ComputeFitness(painter);
-		});
 		nematodes = Reproduction();
+        ComputeFitnesses();
 	}
 
 	List<Nematode> Selection () {
 		var pool = new List<Nematode>();
-		float maxFitness = GetMaxFitness();
 		nematodes.ForEach(c => {
-			var fitness = c.Fitness / maxFitness; // normalize
-			int n = Mathf.FloorToInt(fitness * 50);
+			int n = Mathf.FloorToInt(c.NormalizedFitness * 50);
 			for(int j = 0; j < n; j++) {
 				pool.Add(c);
 			}
@@ -104,7 +103,6 @@ public class GeneticAlgorithm : MonoBehaviour {
 	}
 
 	List<Nematode> Reproduction () {
-
 		var pool = Selection();
 		if(pool.Count <= 0) {
 			Debug.LogWarning("mating pool is empty.");
@@ -145,6 +143,16 @@ public class GeneticAlgorithm : MonoBehaviour {
 		return color.a > 0.5f;
 		// return color.a < 0.1f;
 	}
+
+    void ComputeFitnesses()
+    {
+		nematodes.ForEach(painter => { ComputeFitness(painter); });
+		float maxFitness = GetMaxFitness();
+        nematodes.ForEach(painter =>
+        {
+            painter.NormalizedFitness = painter.Fitness / maxFitness;
+        });
+    }
 
     void ComputeFitness(Nematode painter)
     {

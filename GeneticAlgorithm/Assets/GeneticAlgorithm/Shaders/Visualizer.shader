@@ -18,7 +18,8 @@ Shader "Sketch/Visualizer"
 		Tags { "RenderType"="Opaque" }
 		LOD 100
 
-		Blend SrcAlpha OneMinusSrcAlpha
+		// Blend SrcAlpha OneMinusSrcAlpha
+		Blend SrcAlpha One
 
 		Pass
 		{
@@ -46,6 +47,7 @@ Shader "Sketch/Visualizer"
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
 				float lifetime : TEXCOORD1;
+				float fitness : TEXCOORD1;
 			};
 
 			sampler2D _Lines;
@@ -90,6 +92,7 @@ Shader "Sketch/Visualizer"
 
 					pIn.pos = UnityObjectToClipPos(float4(p, 1));
 					pIn.uv = float2(uv.x, uv.y + t * _Strokes.y);
+					pIn.fitness = p.z;
 					stream.Append(pIn);
 				}
 
@@ -98,6 +101,7 @@ Shader "Sketch/Visualizer"
 
 				pIn.pos = UnityObjectToClipPos(float4(p, 1));
 				pIn.uv = float2(uv.x, uv.y + t * _Strokes.y);
+				pIn.fitness = p.z;
 				stream.Append(pIn);
 			}
 
@@ -162,11 +166,13 @@ Shader "Sketch/Visualizer"
 			fixed4 frag (g2f IN) : SV_Target
 			{
 				float lm = smoothstep(0.0, 0.1, IN.lifetime) * smoothstep(1.0, 0.9, IN.lifetime);
+				float fitness = lerp(0.5, 1.0, saturate(IN.fitness));
 				float4 grad = tex2D(_Gradient, float2(IN.uv.x, 0.5));
-				return fixed4(1, 1, 1, lm) * grad;
+				return fixed4(1, 1, 1, lm * fitness) * grad;
 			}
 
 			ENDCG
 		}
 	}
+
 }

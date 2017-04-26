@@ -10,7 +10,7 @@
 		Tags { "RenderType"="Opaque" }
 		LOD 100
 
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend SrcAlpha One
 
 		Pass
 		{
