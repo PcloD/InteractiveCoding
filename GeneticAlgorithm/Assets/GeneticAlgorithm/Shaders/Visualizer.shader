@@ -47,7 +47,7 @@ Shader "Sketch/Visualizer"
 				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
 				float lifetime : TEXCOORD1;
-				float fitness : TEXCOORD1;
+				float fitness : TEXCOORD2;
 			};
 
 			sampler2D _Lines;
