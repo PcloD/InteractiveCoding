@@ -3,6 +3,8 @@
 #include "cinder/Rand.h"
 #include "cinder/gl/gl.h"
 #include "cinder/params/Params.h"
+#include "cinder/CameraUi.h"
+#include "cinder/Log.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -14,16 +16,22 @@ struct Particle
     ColorA color;
 };
 
-const int NUM_PARTICLES = 2000;
+const int NUM_PARTICLES = 4000;
 
 class LorenzSystemApp : public App {
 public:
     void setup() override;
-    void mouseDown( MouseEvent event ) override;
     void update() override;
     void draw() override;
     
-    params::InterfaceGlRef	mParams;
+    void keyDown(KeyEvent event) override;
+    void mouseDown(MouseEvent event) override;
+    void mouseMove(MouseEvent event) override;
+    void mouseUp(MouseEvent event) override;
+    void mouseDrag(MouseEvent event) override;
+    void mouseWheel(MouseEvent event) override;
+    
+    params::InterfaceGlRef mParams;
     
 private:
     void setLorentzProps(gl::GlslProgRef prog);
@@ -42,16 +50,21 @@ private:
     std::uint32_t mSourceIndex = 0;
     std::uint32_t mDestinationIndex	= 1;
     
+    CameraPersp mViewCam;
+    CameraUi mCamUi;
+    
     float uSigma;
     float uRho;
     float uBeta;
     int uIteration;
     float uDt;
+    
+    float mWindowScale;
 };
 
 void prepareSettings(LorenzSystemApp::Settings *settings)
 {
-    settings->setHighDensityDisplayEnabled(); // try removing this line
+    // settings->setHighDensityDisplayEnabled();
     settings->setMultiTouchEnabled(false);
     settings->setWindowSize(1024, 768);
     settings->setFrameRate(45.0f);
@@ -65,6 +78,8 @@ void prepareSettings(LorenzSystemApp::Settings *settings)
 
 void LorenzSystemApp::setup()
 {
+    mWindowScale = getWindowContentScale();
+    
     uSigma = 10.0f;
     uRho = 30.2f;
     uBeta = 8.0f / 3.0f;
@@ -106,9 +121,7 @@ void LorenzSystemApp::setup()
         gl::ScopedBuffer buffer( mParticleBuffer[i] );
         gl::enableVertexAttribArray(0);
         gl::enableVertexAttribArray(1);
-        // gl::enableVertexAttribArray(2);
-        // gl::enableVertexAttribArray(3);
-        // gl::enableVertexAttribArray(4);
+
         gl::vertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)offsetof(Particle, pos) );
         gl::vertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)offsetof(Particle, color) );
     }
@@ -122,11 +135,42 @@ void LorenzSystemApp::setup()
     
     mUpdateProg = gl::GlslProg::create(gl::GlslProg::Format().vertex(loadAsset("particleUpdate.vs")).                                                                   feedbackFormat(GL_INTERLEAVED_ATTRIBS).feedbackVaryings({ "position", "color" }).attribLocation("iPosition", 0).attribLocation("iColor", 1));
     
-    
+    mViewCam.setEyePoint(vec3(0.0f, 0.0f, -20.0f));
+    mViewCam.setPerspective(60, getWindowWidth() / getWindowHeight(), 1, 10000);
+    mViewCam.lookAt(vec3(0));
+    mCamUi = CameraUi(&mViewCam);
 }
 
-void LorenzSystemApp::mouseDown( MouseEvent event )
+void LorenzSystemApp::keyDown(KeyEvent event)
 {
+    if (event.getCode() == KeyEvent::KEY_ESCAPE) quit();
+}
+
+void LorenzSystemApp::mouseDown(MouseEvent event)
+{
+    mCamUi.mouseDown(event);
+}
+
+void LorenzSystemApp::mouseMove(MouseEvent event)
+{
+}
+
+void LorenzSystemApp::mouseUp(MouseEvent event)
+{
+    mCamUi.mouseUp(event);
+}
+
+void LorenzSystemApp::mouseDrag(MouseEvent event)
+{
+    Rectf r	= Rectf(0, 0, getWindowWidth() * mWindowScale, getWindowHeight() * mWindowScale);
+    if (r.contains(event.getPos())) {
+        mCamUi.mouseDrag(event);
+    }
+}
+
+void LorenzSystemApp::mouseWheel(MouseEvent event)
+{
+    mCamUi.mouseWheel(event);
 }
 
 void LorenzSystemApp::update()
@@ -134,7 +178,7 @@ void LorenzSystemApp::update()
     gl::ScopedGlslProg prog(mUpdateProg);
     setLorentzProps(mUpdateProg);
     
-    gl::ScopedState rasterizer( GL_RASTERIZER_DISCARD, true );	// turn off fragment stage
+    gl::ScopedState rasterizer(GL_RASTERIZER_DISCARD, true);	// turn off fragment stage
     
     // Bind the source data (Attributes refer to specific buffers).
     gl::ScopedVao source(mAttributes[mSourceIndex]);
@@ -155,7 +199,8 @@ void LorenzSystemApp::update()
 void LorenzSystemApp::draw()
 {
     gl::clear(Color(0, 0, 0));
-    gl::setMatricesWindowPersp(getWindowSize(), 60.0f, 1.0f, 10000.0f );
+    gl::setMatrices(mViewCam);
+    gl::viewport(0.0f, 0.0f, getWindowWidth() * mWindowScale, getWindowHeight() * mWindowScale);
     // gl::enableDepthRead();
     // gl::enableDepthWrite();
     
@@ -164,7 +209,8 @@ void LorenzSystemApp::draw()
     
     gl::ScopedVao vao(mAttributes[mSourceIndex]);
     
-    vec3 center = vec3(getWindowCenter(), 0.0f);
+    // vec3 center = vec3(getWindowCenter(), 0.0f);
+    vec3 center = vec3(0.0f, 0.0f, 0.0f);
     mRenderProg->uniform("uIteration", uIteration);
     setLorentzProps(mRenderProg);
     gl::ScopedLineWidth(3.0f);
@@ -173,7 +219,7 @@ void LorenzSystemApp::draw()
     auto t = getElapsedSeconds();
     gl::pushModelMatrix();
     gl::translate(center);
-    gl::scale(vec3(6.2f));
+    gl::scale(vec3(16.2f));
     gl::rotate(t * 0.0025f, vec3(0.1, 1, 0));
     
     gl::context()->setDefaultShaderVars();
